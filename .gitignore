@@ -4,6 +4,7 @@ RDD2022/
 dataset/
 datasets/
 data/
+RDD_SPLIT/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
