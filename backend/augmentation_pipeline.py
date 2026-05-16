@@ -14,21 +14,21 @@ def get_train_transforms(img_size=640):
     """
     return A.Compose(
         [
-            # --- Geometric Transforms ---
+            # Applied geometric transforms
             A.HorizontalFlip(p=0.5),
-            # Random rotation ±15°. border_mode=0 is black border.
-            A.Rotate(limit=15, p=0.5, border_mode=cv2.BORDER_CONSTANT, value=0),
+            # Applied rotation ±15°. border_mode=0 meaning black border
+            A.Rotate(limit=15, p=0.5, border_mode=cv2.BORDER_CONSTANT, fill=0),
             
-            # --- Weather & Lighting (Rainy, Overcast, Night-time) ---
+            # Applied weather & lighting transforms
             # We use A.OneOf to apply one of these distinct environmental conditions
             A.OneOf([
-                # 1. Simulate rain
+                # Rain Simulation
                 A.RandomRain(
-                    slant_lower=-10, slant_upper=10, 
+                    slant_range=(-10, 10), 
                     drop_length=20, drop_width=1, drop_color=(200, 200, 200), 
                     blur_value=3, brightness_coefficient=0.8, p=1.0
                 ),
-                # 2. Simulate overcast (lower brightness and contrast)
+                # Overcast simulation
                 A.Compose([
                     A.RandomBrightnessContrast(
                         brightness_limit=(-0.3, -0.1), 
@@ -36,7 +36,7 @@ def get_train_transforms(img_size=640):
                     ),
                     A.Blur(blur_limit=3, p=0.5)
                 ], p=1.0),
-                # 3. Simulate night-time (low brightness, ISO noise, gamma change)
+                # Night time simulation
                 A.Compose([
                     A.RandomBrightnessContrast(
                         brightness_limit=(-0.6, -0.4), 
@@ -47,13 +47,13 @@ def get_train_transforms(img_size=640):
                 ], p=1.0)
             ], p=0.5),
 
-            # --- Standard Jitter ---
+            # Some noise
             A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.5),
         ],
         bbox_params=A.BboxParams(
             format='yolo', 
             label_fields=['class_labels'],
-            min_visibility=0.2 # drop boxes that are mostly cropped out during rotation
+            min_visibility=0.2 
         )
     )
 
@@ -227,6 +227,38 @@ if __name__ == "__main__":
     transforms = get_train_transforms()
     print("Albumentations pipeline configured successfully.")
     
-    # To test the dataset:
-    # dataset = RoadDamageDataset(img_dir='path/to/images', label_dir='path/to/labels', transforms=transforms)
-    # img, bboxes, labels = dataset[0]
+    # Initialize dataset
+    img_dir = "RDD_SPLIT/train/images"
+    label_dir = "RDD_SPLIT/train/labels"
+    
+    # Check if dataset exists before running
+    if os.path.exists(img_dir) and os.path.exists(label_dir):
+        dataset = RoadDamageDataset(img_dir=img_dir, label_dir=label_dir, transforms=transforms)
+        
+        output_dir = "backend/augmented_samples"
+        os.makedirs(output_dir, exist_ok=True)
+        
+        for i in range(4):
+            idx = random.randint(0, len(dataset)-1)
+            img, bboxes, labels = dataset[idx]
+            
+            # Dataset returns RGB, convert to BGR for cv2 saving
+            img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            h, w, _ = img_bgr.shape
+            
+            # Draw bounding boxes
+            for bbox, label in zip(bboxes, labels):
+                x_c, y_c, bw, bh = bbox
+                xmin = int((x_c - bw / 2) * w)
+                ymin = int((y_c - bh / 2) * h)
+                xmax = int((x_c + bw / 2) * w)
+                ymax = int((y_c + bh / 2) * h)
+                cv2.rectangle(img_bgr, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
+                cv2.putText(img_bgr, f"Class {label}", (xmin, max(ymin - 5, 10)), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                
+            out_path = os.path.join(output_dir, f"sample_{i}.jpg")
+            cv2.imwrite(out_path, img_bgr)
+            print(f"Saved augmented sample to {out_path}")
+    else:
+        print(f"Dataset not found at {img_dir}. Please check the path.")
