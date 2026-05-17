@@ -26,8 +26,8 @@ from collections import defaultdict, Counter
 
 # --- Configuration -----------------------------------------------------------
 
-DATASET_ROOT = Path(r"f:\coding\ssp\RDD_SPLIT")
-OUTPUT_ROOT  = Path(r"f:\coding\ssp\RDD_SPLIT_NEW")   # new split destination
+DATASET_ROOT = Path(__file__).resolve().parent.parent / "RDD_SPLIT"
+OUTPUT_ROOT  = Path(__file__).resolve().parent.parent / "RDD_SPLIT_NEW"   # new split destination
 
 IMAGE_EXTS   = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
 CLASS_NAMES  = {
