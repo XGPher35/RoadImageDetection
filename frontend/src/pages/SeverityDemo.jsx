@@ -52,17 +52,12 @@ export default function SeverityDemo() {
             </h2>
           </div>
           <div className="h-72 sm:h-96 flex items-center justify-center bg-surface-2">
-            <div className="text-center">
-              <svg className="w-10 h-10 text-text-muted mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-              </svg>
-              <p className="text-sm text-text-muted">
-                Interactive Folium map will render here.
-              </p>
-              <p className="text-xs text-text-muted mt-1">
-                Requires processed detection results with GPS coordinates.
-              </p>
-            </div>
+               <iframe
+                  src="/severity_map.html"
+                  title="Severity Map"
+                  className="w-full h-full border-0"
+                />
+              
           </div>
         </div>
       </div>
