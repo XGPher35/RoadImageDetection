@@ -1,116 +1,7 @@
-# import folium
-
-# # ---------------------------------------------------
-# # DEMO DATA
-# # ---------------------------------------------------
-
-# detections = [
-
-#     {
-#         "name": "Suryabinayak",
-#         "lat": 27.66592126389908, 
-#         "lon": 85.42258307866899,
-#         "severity": 0.52,
-#         "label": "Moderate"
-#     },
-
-#     {
-#         "name": "Jagati",
-#         "lat": 27.666350504892222, 
-#         "lon": 85.43794678212379,
-#         "severity": 0.81,
-#         "label": "minor"
-#     },
-
-#     {
-#         "name": "Nalinchowk",
-#         "lat": 27.652046985743315, 
-#         "lon": 85.46143719124431,
-#         "severity": 0.47,
-#         "label": "Moderate"
-#     },
-
-#     {
-#         "name": "Sanga",
-#         "lat":27.64301840572228, 
-#         "lon": 85.46859387942017,
-#         "severity": 0.73,
-#         "label": "Critical"
-#     },
-
-#     {
-#         "name": "Banepa",
-#         "lat":27.631333552456663,
-#         "lon":  85.51814705991903,
-#         "severity": 0.61,
-#         "label": "Moderate"
-#     },
-
-#     {
-#         "name": "Dhulikhel",
-#         "lat": 27.619442532475738,
-#         "lon":  85.55311016550378,
-#         "severity": 0.92,
-#         "label": "Critical"
-#     }
-# ]
-
-# # ---------------------------------------------------
-# # MAP
-# # ---------------------------------------------------
-
-# m = folium.Map(
-#     location=[27.667, 85.44],
-#     zoom_start=11
-# )
-
-# # Route polyline
-# route_points = [(d["lat"], d["lon"]) for d in detections]
-
-# folium.PolyLine(
-#     route_points,
-#     color="blue",
-#     weight=4,
-#     opacity=0.7
-# ).add_to(m)
-
-# # Markers
-# for d in detections:
-
-#     if d["severity"] < 0.3:
-#         color = "green"
-
-#     elif d["severity"] < 0.7:
-#         color = "orange"
-
-#     else:
-#         color = "red"
-
-#     popup = f"""
-#     <b>{d['name']}</b><br>
-#     Severity Index: {d['severity']}<br>
-#     Category: {d['label']}
-#     """
-
-#     folium.Marker(
-#         [d["lat"], d["lon"]],
-#         popup=popup,
-#         icon=folium.Icon(color=color)
-#     ).add_to(m)
-
-# # Save inside React public folder
-# m.save("../frontend/public/severity_map.html")
-
-# print("Map saved to public/severity_map.html")
-
-
 
 import folium
 from routingpy import OSRM
 
-# ---------------------------------------------------
-# DAMAGE DETECTIONS
-# ---------------------------------------------------
 
 detections = [
     {"name": "Suryabinayak", "lat": 27.66592126389908, "lon": 85.42258307866899, "severity": 0.52, "label": "Moderate"},
@@ -121,9 +12,8 @@ detections = [
     {"name": "Dhulikhel", "lat": 27.619442532475738, "lon": 85.55311016550378, "severity": 0.92, "label": "Critical"}
 ]
 
-# ---------------------------------------------------
 # MAP
-# ---------------------------------------------------
+
 
 m = folium.Map(
     location=[27.667, 85.44],
@@ -132,9 +22,8 @@ m = folium.Map(
 
 client = OSRM(base_url="https://router.project-osrm.org")
 
-# ---------------------------------------------------
 # DRAW ROAD ROUTES
-# ---------------------------------------------------
+
 
 for i in range(len(detections) - 1):
 
@@ -177,9 +66,7 @@ for i in range(len(detections) - 1):
     except Exception as e:
         print(f"Routing failed for {start['name']} → {end['name']}: {e}")
 
-# ---------------------------------------------------
 # MARKERS
-# ---------------------------------------------------
 
 for d in detections:
 
@@ -200,9 +87,7 @@ for d in detections:
         icon=folium.Icon(color=marker_color)
     ).add_to(m)
 
-# ---------------------------------------------------
 # SAVE
-# ---------------------------------------------------
 
 m.save("../frontend/public/severity_map.html")
 print("Severity map generated successfully.")
