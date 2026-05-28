@@ -1,0 +1,82 @@
+import json
+
+with open("severity/severity_index.ipynb", "r") as f:
+    nb = json.load(f)
+
+new_source = [
+    "# Testing with actual training data\n",
+    "import os\n",
+    "import cv2\n",
+    "import glob\n",
+    "import numpy as np\n",
+    "\n",
+    "# Get a sample image and label\n",
+    "train_images = glob.glob(\"../RDD_SPLIT/train/images/*.jpg\")\n",
+    "if not train_images:\n",
+    "    print(\"No training images found!\")\n",
+    "else:\n",
+    "    sample_img_path = train_images[0]\n",
+    "    sample_label_path = sample_img_path.replace(\"images\", \"labels\").replace(\".jpg\", \".txt\")\n",
+    "    \n",
+    "    img = cv2.imread(sample_img_path)\n",
+    "    h, w, _ = img.shape\n",
+    "    total_area = w * h\n",
+    "    \n",
+    "    print(f\"Testing on image: {os.path.basename(sample_img_path)}\")\n",
+    "    print(f\"Frame Area: {total_area} px^2\")\n",
+    "    \n",
+    "    # Read ground truth labels\n",
+    "    bboxes = []\n",
+    "    confidences = []\n",
+    "    class_ids = []\n",
+    "    \n",
+    "    if os.path.exists(sample_label_path):\n",
+    "        with open(sample_label_path, 'r') as f:\n",
+    "            for line in f.readlines():\n",
+    "                parts = line.strip().split()\n",
+    "                if len(parts) >= 5:\n",
+    "                    class_id = int(parts[0])\n",
+    "                    x_c, y_c, bw, bh = map(float, parts[1:5])\n",
+    "                    \n",
+    "                    # Convert normalized YOLO format to xyxy\n",
+    "                    x1 = (x_c - bw / 2) * w\n",
+    "                    y1 = (y_c - bh / 2) * h\n",
+    "                    x2 = (x_c + bw / 2) * w\n",
+    "                    y2 = (y_c + bh / 2) * h\n",
+    "                    \n",
+    "                    bboxes.append([x1, y1, x2, y2])\n",
+    "                    confidences.append(1.0) # Ground truth has 100% confidence\n",
+    "                    class_ids.append(class_id)\n",
+    "    \n",
+    "    class MockBoxes:\n",
+    "        def __len__(self): return len(bboxes)\n",
+    "        \n",
+    "    class MockResults:\n",
+    "        pass\n",
+    "    \n",
+    "    results = MockResults()\n",
+    "    results.boxes = MockBoxes()\n",
+    "    \n",
+    "    if len(bboxes) > 0:\n",
+    "        results.boxes.xyxy = type('MockTensor', (), {'cpu': lambda self: type('MockCPU', (), {'numpy': lambda self: np.array(bboxes)})()})()\n",
+    "        results.boxes.conf = type('MockTensor', (), {'cpu': lambda self: type('MockCPU', (), {'numpy': lambda self: np.array(confidences)})()})()\n",
+    "        results.boxes.cls = type('MockTensor', (), {'cpu': lambda self: type('MockCPU', (), {'numpy': lambda self: np.array(class_ids)})()})()\n",
+    "    else:\n",
+    "        results.boxes = None\n",
+    "    \n",
+    "    print(\"\\nExtraction Example:\")\n",
+    "    if results.boxes is not None:\n",
+    "        for i in range(len(bboxes)):\n",
+    "            x1, y1, x2, y2 = bboxes[i]\n",
+    "            print(f\"Detection {i+1}: BBox ({x1:.1f}, {y1:.1f}, {x2:.1f}, {y2:.1f}), Class ID: {class_ids[i]}, Conf: {confidences[i]:.4f}\")\n",
+    "    \n ",
+    "    si = calculate_severity_index(results, total_area)\n",
+    "    print(f\"\\nCalculated Severity Index: {si:.5f}\")\n"
+]
+
+nb["cells"][3]["source"] = new_source
+# Clear output
+nb["cells"][3]["outputs"] = []
+
+with open("severity/severity_index.ipynb", "w") as f:
+    json.dump(nb, f, indent=1)
