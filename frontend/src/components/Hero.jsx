@@ -19,8 +19,8 @@ export default function Hero() {
               Smart Highway Patrol
             </h1>
             <p className="text-lg text-text-secondary leading-relaxed max-w-xl">
-              Automated road defect detection powered by YOLO and deep learning
-              mapping Nepal's road infrastructure damage in real time.
+              Automated road defect detection powered by YOLO and deep learning —
+              mapping Nepal&apos;s road infrastructure damage in real time.
             </p>
           </div>
 
@@ -29,7 +29,7 @@ export default function Hero() {
               to="/detect"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-accent text-white text-base font-medium hover:bg-accent-hover transition-colors"
             >
-              Detection Demo
+              Run Detection
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </Link>
             <Link
@@ -41,24 +41,32 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Midterm pipeline */}
+        {/* Pipeline */}
         <div className="border border-border rounded-xl bg-surface/60 p-8 sm:p-10">
           <p className="text-sm text-text-muted uppercase tracking-widest mb-8 font-medium">
-            Midterm Progress Phase
+            Project Pipeline
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 sm:gap-6">
             {[
-              { step: 'Data Audit', desc: 'Evaluating dataset splits, class distribution, and augmentation samples.' },
-              { step: 'Baseline Run', desc: 'Initial YOLO training (20-30 epochs) to establish loss curves and baseline mAP.' },
-              { step: 'Severity Index', desc: 'Defining severity formula, class weights, and running sample predictions.' },
-              { step: 'Map Prototype', desc: 'Developing a Folium map prototype with plotted markers for local images.' },
+              { step: 'Data Audit', desc: 'Dataset splits validated, class distribution analysed, augmentation pipeline built and tested.', done: true },
+              { step: 'Model Training', desc: 'YOLOv8 baseline trained for 30 epochs. Loss curves and mAP@50 metrics extracted per class.', done: true },
+              { step: 'Severity Index', desc: 'SI formula implemented with class-weighted scoring. Validated on 30 sample frames.', done: true },
+              { step: 'Route Mapping', desc: 'Folium heatmap prototype with severity-graded road segments along local routes.', done: true },
             ].map((s, i) => (
               <div key={i} className="flex sm:flex-col items-start sm:items-center gap-4 relative">
                 {i < 3 && (
                   <div className="hidden sm:block absolute top-4 left-1/2 w-full h-px bg-border-light" style={{ transform: 'translateX(16px)' }} />
                 )}
-                <div className="shrink-0 w-8 h-8 rounded-full border border-border-light flex items-center justify-center text-sm text-text-muted font-mono bg-surface-2 relative z-10">
-                  {i + 1}
+                <div className={`shrink-0 w-8 h-8 rounded-full border flex items-center justify-center text-sm font-mono relative z-10 ${
+                  s.done
+                    ? 'border-teal/40 bg-teal/10 text-teal'
+                    : 'border-border-light bg-surface-2 text-text-muted'
+                }`}>
+                  {s.done ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+                  ) : (
+                    i + 1
+                  )}
                 </div>
                 <div className="sm:text-center">
                   <div className="font-heading font-semibold text-base text-text-primary mb-1.5">{s.step}</div>
