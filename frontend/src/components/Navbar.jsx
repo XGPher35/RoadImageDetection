@@ -48,7 +48,13 @@ export default function Navbar() {
                 to="/detect"
                 className="text-sm text-accent hover:text-accent-hover transition-colors"
               >
-                Demo →
+                Detection
+              </Link>
+              <Link
+                to="/severity"
+                className="text-sm text-accent hover:text-accent-hover transition-colors"
+              >
+                Severity
               </Link>
             </div>
 
@@ -87,7 +93,14 @@ export default function Navbar() {
               onClick={() => setOpen(false)}
               className="block py-1.5 text-sm text-accent"
             >
-              Demo →
+              Detection
+            </Link>
+            <Link
+              to="/severity"
+              onClick={() => setOpen(false)}
+              className="block py-1.5 text-sm text-accent"
+            >
+              Severity
             </Link>
           </div>
         </div>
