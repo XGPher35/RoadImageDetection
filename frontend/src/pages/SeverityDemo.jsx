@@ -264,20 +264,23 @@ export default function SeverityDemo() {
           </div>
 
           {/* Folium Map */}
-          <div className="border border-border rounded-lg overflow-hidden">
-            <div className="p-5 border-b border-border bg-surface">
-              <span className="text-xs font-medium text-text-muted uppercase tracking-widest">
-                Route Severity Map
-              </span>
+          {result?.map_url && (
+            <div className="border border-border rounded-lg overflow-hidden">
+              <div className="p-5 border-b border-border bg-surface">
+                <span className="text-xs font-medium text-text-muted uppercase tracking-widest">
+                  Route Severity Map
+                </span>
+              </div>
+
+              <div className="h-72 sm:h-[28rem]">
+                <iframe
+                  src={`http://localhost:8000${result.map_url}`}
+                  title="Severity heatmap along surveyed route"
+                  className="w-full h-full border-0"
+                />
+              </div>
             </div>
-            <div className="h-72 sm:h-[28rem]">
-              <iframe
-                src="/severity_map.html"
-                title="Severity heatmap along surveyed route"
-                className="w-full h-full border-0"
-              />
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

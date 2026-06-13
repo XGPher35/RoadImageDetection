@@ -1,93 +1,145 @@
-
 import folium
-from routingpy import OSRM
+from geopy import Nominatim
+import json
+from pathlib import Path
 
+DATA_FILE = Path("severity_points.json")
+geolocator=Nominatim(user_agent="road_damage_mapper")
 
-detections = [
-    {"name": "Suryabinayak", "lat": 27.66592126389908, "lon": 85.42258307866899, "severity": 0.52, "label": "Moderate"},
-    {"name": "Jagati", "lat": 27.666350504892222, "lon": 85.43794678212379, "severity": 0.81, "label": "Minor"},
-    {"name": "Nalinchowk", "lat": 27.652046985743315, "lon": 85.46143719124431, "severity": 0.47, "label": "Moderate"},
-    {"name": "Sanga", "lat": 27.64301840572228, "lon": 85.46859387942017, "severity": 0.73, "label": "Critical"},
-    {"name": "Banepa", "lat": 27.631333552456663, "lon": 85.51814705991903, "severity": 0.61, "label": "Moderate"},
-    {"name": "Dhulikhel", "lat": 27.619442532475738, "lon": 85.55311016550378, "severity": 0.92, "label": "Critical"}
-]
-
-# MAP
-
-
-m = folium.Map(
-    location=[27.667, 85.44],
-    zoom_start=11
-)
-
-client = OSRM(base_url="https://router.project-osrm.org")
-
-# DRAW ROAD ROUTES
-
-
-for i in range(len(detections) - 1):
-
-    start = detections[i]
-    end = detections[i + 1]
-
-    avg_severity = (start["severity"] + end["severity"]) / 2
-
-    if avg_severity < 0.3:
-        road_color = "green"
-    elif avg_severity < 0.7:
-        road_color = "orange"
-    else:
-        road_color = "red"
-
+def get_location_name(lat, lon):
     try:
-        route = client.directions(
-            locations=[
-                [start["lon"], start["lat"]],
-                [end["lon"], end["lat"]]
-            ],
-            profile="driving"
+        location = geolocator.reverse(
+            (lat, lon),
+            language="en",
+            exactly_one=True
         )
 
-        coordinates = route.geometry
+        if location:
+            address = location.raw.get("address", {})
 
-        route_points = [
-            [coord[1], coord[0]]
-            for coord in coordinates
-        ]
-
-        folium.PolyLine(
-            route_points,
-            color=road_color,
-            weight=7,
-            opacity=0.85,
-            tooltip=f"{start['name']} → {end['name']}"
-        ).add_to(m)
+            return (
+                address.get("road")
+                or address.get("suburb")
+                or address.get("village")
+                or address.get("town")
+                or address.get("city")
+                or "Unknown Location"
+            )
 
     except Exception as e:
-        print(f"Routing failed for {start['name']} → {end['name']}: {e}")
+        print("Reverse geocoding failed:", e)
 
-# MARKERS
+    return "Unknown Location"
 
-for d in detections:
+def save_detection(location, severity, label):
+    """
+    Append a new detection to JSON storage.
+    """
 
-    if d["severity"] < 0.3:
-        marker_color = "green"
-    elif d["severity"] < 0.7:
-        marker_color = "orange"
+    # Ensure file exists
+    if not DATA_FILE.exists():
+        DATA_FILE.write_text("[]")
+
+    with open(DATA_FILE, "r") as f:
+        data = json.load(f)
+
+    lat = location["latitude"]
+    lon = location["longitude"]
+
+    place_name = get_location_name(lat, lon)
+
+    new_entry = {
+        "name": place_name,
+        "location": {
+            "lat": lat,
+            "long": lon
+        },
+        "severity": severity,
+        "label": label
+    }
+    if new_entry not in data:
+        data.append(new_entry)
+
+
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def load_detections():
+    """
+    Read all detections from JSON.
+    """
+    if not DATA_FILE.exists():
+        return []
+
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+
+def generate_map(location=None, severity=None, label=None):
+    """
+    If location/severity/label provided then store first,
+    then generate map using full dataset.
+    """
+
+    # store new detection
+    if location and severity is not None and label:
+        save_detection(location, severity, label)
+
+    #load ALL detections
+    detections = load_detections()
+
+    print(f"TOTAL DETECTIONS LOADED: {len(detections)}")
+
+    # Default center 
+    if detections:
+        latest = detections[-1]
+
+        center_lat = latest["location"]["lat"]
+        center_lon = latest["location"]["long"]
     else:
-        marker_color = "red"
+        # fallback if JSON is empty
+        center_lat = 27.667
+        center_lon = 85.44
 
-    folium.Marker(
-        [d["lat"], d["lon"]],
-        popup=f"""
-        <b>{d['name']}</b><br>
-        Severity: {d['severity']}<br>
-        Category: {d['label']}
-        """,
-        icon=folium.Icon(color=marker_color)
-    ).add_to(m)
+    m = folium.Map(
+        location=[center_lat, center_lon],
+        zoom_start=40
+    )
 
-# SAVE
+    # MARKERS
 
-m.save("../frontend/public/severity_map.html")
-print("Severity map generated successfully.")
+    for i, d in enumerate(detections):
+
+        is_latest = (i == len(detections) - 1)
+
+        if d["label"] == "Good":
+            marker_color = "green"
+        elif d["label"] == "Fair":
+            marker_color = "lightgreen"
+        elif d["label"] == "Poor":
+            marker_color = "orange"
+        else:
+            marker_color = "red"
+
+        if is_latest:
+            icon = "star"
+        else:
+            icon = "info-sign"
+
+        folium.Marker(
+            [d["location"]["lat"], d["location"]["long"]],
+            popup=f"""
+            <b>{d['name']}</b><br>
+            Severity: {d['severity']}<br>
+            Category: {d['label']}
+            {'<br><b>LATEST DETECTION</b>' if is_latest else ''}
+            """,
+            icon=folium.Icon(
+                color=marker_color,
+                icon=icon
+            )
+        ).add_to(m)
+
+    m.save("map/severity_map.html")
+    print("Severity map generated successfully.")

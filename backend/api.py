@@ -7,11 +7,15 @@ import io
 import base64
 from pathlib import Path
 
+from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
 import cv2
 import numpy as np
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from ultralytics import YOLO
+from severity_map import generate_map
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -43,6 +47,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.mount(
+    "/map",
+    StaticFiles(directory="map"),
+    name="map"
 )
 
 # Load model once at startup
@@ -130,6 +140,51 @@ def _run_inference(img: np.ndarray):
 
     return detections, severity_index, grade, class_counts, frame_area
 
+def convert_to_degrees(value):
+    d = float(value[0])
+    m = float(value[1])
+    s = float(value[2])
+
+    return d + (m / 60.0) + (s / 3600.0)
+
+
+def get_gps_from_image(image_bytes):
+    try:
+        image = Image.open(io.BytesIO(image_bytes))
+        exif = image._getexif()
+
+        if not exif:
+            return None
+
+        gps_info = {}
+
+        for tag, value in exif.items():
+            decoded = TAGS.get(tag, tag)
+
+            if decoded == "GPSInfo":
+                for gps_tag in value:
+                    sub_decoded = GPSTAGS.get(gps_tag, gps_tag)
+                    gps_info[sub_decoded] = value[gps_tag]
+
+        if not gps_info:
+            return None
+
+        lat = convert_to_degrees(gps_info["GPSLatitude"])
+        if gps_info["GPSLatitudeRef"] != "N":
+            lat = -lat
+
+        lon = convert_to_degrees(gps_info["GPSLongitude"])
+        if gps_info["GPSLongitudeRef"] != "E":
+            lon = -lon
+
+        return {
+            "latitude": lat,
+            "longitude": lon
+        }
+
+    except Exception as e:
+        print("GPS extraction failed:", e)
+        return None
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
@@ -160,12 +215,27 @@ async def detect(file: UploadFile = File(...)):
 
 @app.post("/api/severity")
 async def severity(file: UploadFile = File(...)):
-    """Run detection + severity index calculation on an uploaded image."""
     contents = await file.read()
+
     img = _read_image(contents)
 
     detections, si, grade, class_counts, frame_area = _run_inference(img)
+
     annotated = _annotate_image(img, detections)
+
+    try:
+        gps = get_gps_from_image(contents)
+
+        if gps:
+            generate_map(gps, si, grade)
+
+            map_url = "/map/severity_map.html"
+        else:
+            map_url = None
+
+    except Exception as e:
+        print("Map generation error:", e)
+        map_url = None
 
     return {
         "image": _image_to_base64(annotated),
@@ -177,4 +247,5 @@ async def severity(file: UploadFile = File(...)):
         "frame_area": frame_area,
         "image_width": img.shape[1],
         "image_height": img.shape[0],
+        "map_url": map_url
     }

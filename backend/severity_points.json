@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Mahalaxmi",
+    "location": {
+      "lat": 27.65905719972222,
+      "long": 85.34850819972222
+    },
+    "severity": 0.244037,
+    "label": "Critical"
+  },
+  {
+    "name": "Mahalaxmi",
+    "location": {
+      "lat": 27.65885499972222,
+      "long": 85.34845159999999
+    },
+    "severity": 0,
+    "label": "Good"
+  }
+]
