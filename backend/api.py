@@ -14,22 +14,35 @@ from fastapi.middleware.cors import CORSMiddleware
 from ultralytics import YOLO
 
 # ── Constants ────────────────────────────────────────────────────────────────
+import sys
+import os
 
-CLASS_NAMES = {0: "Longitudinal Crack", 1: "Transverse Crack", 2: "Alligator Crack", 3: "Pothole"}
-CLASS_WEIGHTS = {0: 0.5, 1: 0.3, 2: 0.8, 3: 1.0}
+# Ensure project root is on sys.path so 'severity.si_utils' is importable
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from severity.si_utils import (
+    CLASS_NAMES as RAW_CLASS_NAMES, 
+    CLASS_WEIGHTS, 
+    calculate_severity_index,
+    grade_severity
+)
+
+# API presentation layer: Add " Crack" suffix to match original output
+CLASS_NAMES = {
+    0: f"{RAW_CLASS_NAMES[0]} Crack", 
+    1: f"{RAW_CLASS_NAMES[1]} Crack", 
+    2: f"{RAW_CLASS_NAMES[2]} Crack", 
+    3: RAW_CLASS_NAMES[3]
+}
+
 BBOX_COLORS = {
     0: (52, 152, 219),   # blue
     1: (46, 204, 191),   # teal
     2: (230, 126, 34),   # orange
     3: (231, 76, 60),    # red
 }
-
-GRADE_THRESHOLDS = [
-    (0.005, "Good"),
-    (0.02,  "Fair"),
-    (0.05,  "Poor"),
-    (float("inf"), "Critical"),
-]
 
 WEIGHTS_PATH = Path(__file__).parent / "model" / "weights" / "best.pt"
 
@@ -50,12 +63,6 @@ model = YOLO(str(WEIGHTS_PATH))
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
-
-def grade_severity(si: float) -> str:
-    for threshold, label in GRADE_THRESHOLDS:
-        if si < threshold:
-            return label
-    return "Critical"
 
 
 def _read_image(file_bytes: bytes) -> np.ndarray:
@@ -94,32 +101,16 @@ def _run_inference(img: np.ndarray):
     frame_area = w * h
     results = model(img, verbose=False)
 
+    si, raw_details = calculate_severity_index(results, frame_area)
+    grade = grade_severity(si)
+    
+    # Map back to API expected keys (with " Crack" suffixes where applicable)
     detections = []
-    for r in results:
-        if r.boxes is None or len(r.boxes) == 0:
-            continue
-        for box in r.boxes:
-            cid = int(box.cls)
-            conf = float(box.conf)
-            x1, y1, x2, y2 = box.xyxy[0].tolist()
-            bbox_area = (x2 - x1) * (y2 - y1)
-            relative_area = bbox_area / frame_area
-            weight = CLASS_WEIGHTS.get(cid, 0.1)
-            contribution = weight * conf * relative_area
-
-            detections.append({
-                "class_id": cid,
-                "class_name": CLASS_NAMES.get(cid, f"Unknown({cid})"),
-                "confidence": round(conf, 4),
-                "bbox": [round(x1, 1), round(y1, 1), round(x2, 1), round(y2, 1)],
-                "bbox_area": round(bbox_area, 1),
-                "relative_area": round(relative_area, 6),
-                "weight": weight,
-                "contribution": round(contribution, 6),
-            })
-
-    severity_index = sum(d["contribution"] for d in detections)
-    grade = grade_severity(severity_index)
+    for d in raw_details:
+        cid = d["class_id"]
+        # Replace short name with full API name
+        d["class_name"] = CLASS_NAMES.get(cid, d["class_name"])
+        detections.append(d)
 
     # Per-class counts
     class_counts = {}
@@ -128,7 +119,7 @@ def _run_inference(img: np.ndarray):
     for d in detections:
         class_counts[d["class_name"]] += 1
 
-    return detections, severity_index, grade, class_counts, frame_area
+    return detections, si, grade, class_counts, frame_area
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
