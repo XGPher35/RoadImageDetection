@@ -1,0 +1,5 @@
+rank,image,lat,long,detections,per_frame_SI,grade,segment_aggregated_SI,segment_grade
+1,sample_2.jpg,27.66736,85.44044,5,0.06284,Critical,0.01885,Fair
+2,sample_3.jpg,27.66754,85.44066,0,0.0,Good,0.0132,Fair
+3,sample_1.jpg,27.66718,85.44022,0,0.0,Good,0.0,Good
+4,sample_0.jpg,27.667,85.44,0,0.0,Good,0.0,Good

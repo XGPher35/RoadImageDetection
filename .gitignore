@@ -79,3 +79,9 @@ venv.bak/
 
 # Node
 node_modules/
+
+# Large model checkpoints — keep only the final deployable model
+# (backend/model/weights/best.pt). Training-run checkpoints are ~86MB each
+# and exceed GitHub's recommended file size; re-generate via train_colab.ipynb.
+RDD2022_runs/**/weights/
+severity/yolov8n.pt
