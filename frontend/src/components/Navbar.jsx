@@ -22,8 +22,8 @@ export default function Navbar() {
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-base/90 backdrop-blur-md border-b border-border'
+        scrolled || !isHome
+          ? 'bg-base/95 backdrop-blur-md border-b border-border'
           : 'bg-transparent'
       }`}
     >
@@ -32,46 +32,52 @@ export default function Navbar() {
           SHP
         </Link>
 
+        {/* Anchor links — home only */}
         {isHome && (
-          <>
-            <div className="hidden sm:flex items-center gap-6">
-              {links.map((l) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  className="text-sm text-text-muted hover:text-text-primary transition-colors"
-                >
-                  {l.label}
-                </a>
-              ))}
-              <Link
-                to="/detect"
-                className="text-sm text-accent hover:text-accent-hover transition-colors"
+          <div className="hidden sm:flex items-center gap-6">
+            {links.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                className="text-sm text-text-muted hover:text-text-primary transition-colors"
               >
-                Detection
-              </Link>
-              <Link
-                to="/severity"
-                className="text-sm text-accent hover:text-accent-hover transition-colors"
-              >
-                Severity
-              </Link>
-            </div>
+                {l.label}
+              </a>
+            ))}
+          </div>
+        )}
 
-            <button
-              onClick={() => setOpen(!open)}
-              className="sm:hidden text-text-secondary"
-              aria-label="Toggle menu"
-            >
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                {open ? (
-                  <path d="M5 5l10 10M5 15L15 5" />
-                ) : (
-                  <path d="M3 5h14M3 10h14M3 15h14" />
-                )}
-              </svg>
-            </button>
-          </>
+        {/* Page nav — always visible */}
+        <div className="hidden sm:flex items-center gap-5">
+          <Link
+            to="/detect"
+            className={`text-sm transition-colors ${location.pathname === '/detect' ? 'text-accent font-medium' : 'text-text-muted hover:text-text-primary'}`}
+          >
+            Detection
+          </Link>
+          <Link
+            to="/severity"
+            className={`text-sm transition-colors ${location.pathname === '/severity' ? 'text-accent font-medium' : 'text-text-muted hover:text-text-primary'}`}
+          >
+            Severity
+          </Link>
+        </div>
+
+        {/* Mobile hamburger — home only */}
+        {isHome && (
+          <button
+            onClick={() => setOpen(!open)}
+            className="sm:hidden text-text-secondary"
+            aria-label="Toggle menu"
+          >
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+              {open ? (
+                <path d="M5 5l10 10M5 15L15 5" />
+              ) : (
+                <path d="M3 5h14M3 10h14M3 15h14" />
+              )}
+            </svg>
+          </button>
         )}
       </div>
 

@@ -1,26 +1,26 @@
 import { useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 import ImageUpload from '../components/ImageUpload';
 
 const GRADE_STYLES = {
-  Good:     { bg: 'rgba(46,204,191,0.08)',  border: 'rgba(46,204,191,0.25)',  text: '#2dd4bf' },
-  Fair:     { bg: 'rgba(241,196,15,0.08)',   border: 'rgba(241,196,15,0.25)',  text: '#f1c40f' },
-  Poor:     { bg: 'rgba(230,126,34,0.08)',   border: 'rgba(230,126,34,0.25)',  text: '#e67e22' },
-  Critical: { bg: 'rgba(231,76,60,0.08)',    border: 'rgba(231,76,60,0.25)',   text: '#e74c3c' },
+  Good:     { bg: 'rgba(46,204,191,0.08)',  border: 'rgba(46,204,191,0.3)',  text: '#2dd4bf' },
+  Fair:     { bg: 'rgba(241,196,15,0.08)',   border: 'rgba(241,196,15,0.3)',  text: '#f1c40f' },
+  Poor:     { bg: 'rgba(230,126,34,0.08)',   border: 'rgba(230,126,34,0.3)',  text: '#e67e22' },
+  Critical: { bg: 'rgba(231,76,60,0.08)',    border: 'rgba(231,76,60,0.3)',   text: '#e74c3c' },
 };
 
 const CLASS_COLORS = {
   'Longitudinal Crack': '#3498db',
-  'Transverse Crack': '#2dd4bf',
-  'Alligator Crack': '#e67e22',
-  'Pothole': '#e74c3c',
+  'Transverse Crack':   '#2dd4bf',
+  'Alligator Crack':    '#e67e22',
+  'Pothole':            '#e74c3c',
 };
 
 const TIERS = [
-  { tier: 'Good',     range: 'SI < 0.005',  color: '#2dd4bf', desc: 'Minimal or no visible damage.' },
-  { tier: 'Fair',     range: '0.005 – 0.02', color: '#f1c40f', desc: 'Minor cracks, low urgency.' },
-  { tier: 'Poor',     range: '0.02 – 0.05',  color: '#e67e22', desc: 'Noticeable damage, needs maintenance.' },
-  { tier: 'Critical', range: 'SI ≥ 0.05',    color: '#e74c3c', desc: 'Severe damage, immediate action.' },
+  { tier: 'Good',     range: 'SI < 0.005',     color: '#2dd4bf', desc: 'Minimal or no visible damage.' },
+  { tier: 'Fair',     range: '0.005 – 0.02',   color: '#f1c40f', desc: 'Minor cracks, low urgency.' },
+  { tier: 'Poor',     range: '0.02 – 0.05',    color: '#e67e22', desc: 'Noticeable damage, needs maintenance.' },
+  { tier: 'Critical', range: 'SI ≥ 0.05',      color: '#e74c3c', desc: 'Severe damage, immediate action.' },
 ];
 
 export default function SeverityDemo() {
@@ -32,7 +32,6 @@ export default function SeverityDemo() {
     setLoading(true);
     setError(null);
     setResult(null);
-
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -48,7 +47,6 @@ export default function SeverityDemo() {
 
   const gs = result ? GRADE_STYLES[result.grade] || GRADE_STYLES.Good : null;
 
-  // Per-class contribution aggregation
   const classContribs = {};
   if (result?.detections) {
     for (const d of result.detections) {
@@ -59,65 +57,54 @@ export default function SeverityDemo() {
 
   return (
     <div className="min-h-screen bg-base text-text-primary">
-      <header className="border-b border-border bg-base/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="site-container h-14 flex items-center justify-between">
-          <Link to="/" className="font-heading font-semibold text-sm tracking-tight">SHP</Link>
-          <div className="flex items-center gap-5">
-            <Link to="/detect" className="text-sm text-text-muted hover:text-text-primary transition-colors">
-              Detection
-            </Link>
-            <Link to="/" className="text-sm text-text-muted hover:text-text-primary transition-colors flex items-center gap-1.5">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-              Home
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
-      <div className="site-container py-12">
+      <div className="site-container pt-24 pb-16">
+
         {/* Page header */}
         <div className="mb-10">
-          <p className="text-sm font-medium text-accent uppercase tracking-widest mb-3">Analyse</p>
-          <h1 className="font-heading text-2xl sm:text-3xl font-bold mb-3">
+          <p className="text-xs font-semibold text-accent uppercase tracking-widest mb-3">Analyse</p>
+          <h1 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
             Severity Analysis
           </h1>
           <p className="text-sm text-text-secondary leading-relaxed max-w-xl">
-            Upload a road image to compute the Severity Index. The SI weights
-            each defect by damage type, model confidence, and physical footprint
-            to produce a single condition score.
+            Upload a road image to compute the Severity Index. The SI weights each defect
+            by damage type, model confidence, and physical footprint to produce a single
+            condition score.
           </p>
         </div>
 
         <ImageUpload onFileSelected={handleUpload} disabled={loading} />
 
         {loading && (
-          <div className="flex items-center justify-center gap-3 py-12">
+          <div className="flex items-center justify-center gap-3 py-16">
             <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
             <span className="text-sm text-text-muted">Computing severity…</span>
           </div>
         )}
 
         {error && (
-          <div className="mt-6 border border-red-500/30 bg-red-500/5 rounded-lg px-5 py-4 text-sm text-red-400">
+          <div className="mt-6 border border-red-500/30 bg-red-500/5 rounded-xl px-5 py-4 text-sm text-red-400">
             {error}
           </div>
         )}
 
         {result && (
-          <div className="mt-10 space-y-8">
-            {/* SI + Annotated image */}
+          <div className="mt-10 space-y-6">
+
+            {/* SI Card + Annotated image */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              {/* SI Card */}
+              {/* SI Score Card */}
               <div
-                className="rounded-lg p-6 flex flex-col items-center justify-center text-center"
+                className="rounded-xl p-7 flex flex-col items-center justify-center text-center"
                 style={{ background: gs?.bg, border: `1px solid ${gs?.border}` }}
               >
-                <p className="text-xs text-text-muted uppercase tracking-widest mb-4">Severity Index</p>
-                <div className="font-heading text-5xl font-bold tabular-nums mb-1" style={{ color: gs?.text }}>
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-5">Severity Index</p>
+                <div className="font-heading text-6xl font-bold tabular-nums mb-2" style={{ color: gs?.text }}>
                   {result.severity_index.toFixed(4)}
                 </div>
                 <div
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mt-3"
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mt-3"
                   style={{ background: gs?.bg, border: `1px solid ${gs?.border}`, color: gs?.text }}
                 >
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: gs?.text }} />
@@ -135,17 +122,20 @@ export default function SeverityDemo() {
 
               {/* Annotated image */}
               {result.image && (
-                <div className="lg:col-span-2 border border-border rounded-lg overflow-hidden">
-                  <div className="px-5 py-3 border-b border-border bg-surface">
-                    <span className="text-xs font-medium text-text-muted uppercase tracking-widest">
+                <div className="lg:col-span-2 border border-border rounded-xl overflow-hidden">
+                  <div className="px-5 py-3.5 border-b border-border bg-surface flex items-center justify-between">
+                    <span className="text-xs font-semibold text-text-muted uppercase tracking-widest">
                       Annotated Output
                     </span>
+                    <span className="text-xs text-text-muted font-mono">
+                      {result.image_width}×{result.image_height}
+                    </span>
                   </div>
-                  <div className="p-3 sm:p-4 flex justify-center bg-surface-2">
+                  <div className="p-4 flex justify-center bg-surface-2">
                     <img
                       src={`data:image/jpeg;base64,${result.image}`}
                       alt="Severity analysis result"
-                      className="max-w-full max-h-[420px] rounded object-contain"
+                      className="max-w-full max-h-[420px] rounded-lg object-contain"
                     />
                   </div>
                 </div>
@@ -154,8 +144,8 @@ export default function SeverityDemo() {
 
             {/* Per-class contribution bars */}
             {Object.keys(classContribs).length > 0 && (
-              <div className="border border-border rounded-lg p-6 bg-surface">
-                <span className="text-xs font-medium text-text-muted uppercase tracking-widest">
+              <div className="border border-border rounded-xl p-6 bg-surface">
+                <span className="text-xs font-semibold text-text-muted uppercase tracking-widest">
                   Contribution by Type
                 </span>
                 <div className="mt-5 space-y-4">
@@ -163,7 +153,7 @@ export default function SeverityDemo() {
                     .sort(([, a], [, b]) => b - a)
                     .map(([cls, contrib]) => (
                       <div key={cls}>
-                        <div className="flex items-center justify-between text-sm mb-1.5">
+                        <div className="flex items-center justify-between text-sm mb-2">
                           <span className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full" style={{ background: CLASS_COLORS[cls] || '#888' }} />
                             {cls}
@@ -182,11 +172,11 @@ export default function SeverityDemo() {
               </div>
             )}
 
-            {/* Detection breakdown */}
+            {/* Per-detection breakdown table */}
             {result.detections?.length > 0 && (
-              <div className="border border-border rounded-lg overflow-hidden">
-                <div className="px-5 py-3 border-b border-border bg-surface">
-                  <span className="text-xs font-medium text-text-muted uppercase tracking-widest">
+              <div className="border border-border rounded-xl overflow-hidden">
+                <div className="px-5 py-3.5 border-b border-border bg-surface">
+                  <span className="text-xs font-semibold text-text-muted uppercase tracking-widest">
                     Per-Detection Breakdown
                   </span>
                 </div>
@@ -232,10 +222,9 @@ export default function SeverityDemo() {
               </div>
             )}
 
-            {/* No detections */}
             {result.total_detections === 0 && (
-              <div className="border border-teal/20 bg-teal/5 rounded-lg px-6 py-5 text-center">
-                <p className="text-sm text-teal font-medium mb-1">No defects detected — Grade: Good</p>
+              <div className="border border-teal/20 bg-teal/5 rounded-xl px-6 py-6 text-center">
+                <p className="text-sm text-teal font-semibold mb-1">No defects detected — Grade: Good</p>
                 <p className="text-xs text-text-muted">
                   This road surface appears undamaged. Try an image with visible cracks or potholes.
                 </p>
@@ -244,43 +233,61 @@ export default function SeverityDemo() {
           </div>
         )}
 
-        {/* Reference section */}
+        {/* ── Always-visible bottom sections ─────────────────────────────────── */}
         <div className="mt-20 space-y-10">
+
           {/* Grading scale */}
           <div>
-            <p className="text-xs font-medium text-text-muted uppercase tracking-widest mb-5">Grading Scale</p>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-5">Grading Scale</p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {TIERS.map((t) => (
-                <div key={t.tier} className="border border-border rounded-lg p-4 bg-surface">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-2 h-2 rounded-full" style={{ background: t.color }} />
+                <div key={t.tier} className="border border-border rounded-xl p-5 bg-surface">
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: t.color }} />
                     <span className="font-heading text-sm font-semibold">{t.tier}</span>
                   </div>
-                  <p className="text-xs text-text-muted leading-relaxed mb-2">{t.desc}</p>
+                  <p className="text-xs text-text-muted leading-relaxed mb-3">{t.desc}</p>
                   <span className="text-[11px] font-mono text-text-muted">{t.range}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Folium Map */}
-          {result?.map_url && (
-            <div className="border border-border rounded-lg overflow-hidden">
-              <div className="p-5 border-b border-border bg-surface">
-                <span className="text-xs font-medium text-text-muted uppercase tracking-widest">
-                  Route Severity Map
+          {/* Route Severity Map — always visible */}
+          <div>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-5">Route Severity Map</p>
+            <div className="border border-border rounded-xl overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-border bg-surface flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-muted uppercase tracking-widest">
+                  Suryabinayak → Dhulikhel Segment Report
+                </span>
+                <span
+                  className="text-xs px-2.5 py-1 rounded-full font-medium"
+                  style={{
+                    background: result?.map_url ? 'rgba(46,204,191,0.12)' : 'rgba(232,118,42,0.12)',
+                    color: result?.map_url ? '#2dd4bf' : '#e8762a',
+                  }}
+                >
+                  {result?.map_url ? '📍 Live GPS' : '📊 Batch Report'}
                 </span>
               </div>
-
-              <div className="h-72 sm:h-[28rem]">
+              <div className="h-[32rem]">
                 <iframe
-                  src={`http://localhost:8000${result.map_url}`}
+                  src={result?.map_url ? `http://localhost:8000${result.map_url}` : '/severity_map.html'}
                   title="Severity heatmap along surveyed route"
                   className="w-full h-full border-0"
                 />
               </div>
+              {!result?.map_url && (
+                <div className="px-5 py-3 border-t border-border bg-surface/50">
+                  <p className="text-xs text-text-muted">
+                    Showing pre-generated segment report from RDD2022 validation set. Upload a GPS-tagged image to see live detections.
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+
         </div>
       </div>
     </div>
