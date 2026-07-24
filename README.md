@@ -68,10 +68,6 @@ source .venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-> **Note:** `backend/requirements.txt` pins `torch==2.3.0`, which predates Python 3.14.
-> On Python 3.14, install an unpinned current `torch` (≥2.12) instead — verified working
-> with `ultralytics` + `torch 2.12` on 3.14.
-
 ---
 
 ## Usage
@@ -149,7 +145,5 @@ into segment scores and graded:
 
 ## Scope Note
 
-The project is trained and evaluated entirely on **RDD2022**. Collection/annotation of a
-local Nepali road dataset and fine-tuning to close the geographic domain gap are
-identified as **future work**, not part of this iteration.
+The project is trained and evaluated entirely on **RDD2022**.
 ```
